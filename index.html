@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>분리수거 대작전</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 오락실처럼 시끄럽고 신나게, 틀리면 바로 배우는 게임
+   IDEA: 재활용 선별장 컨베이어 — 쓰레기 괴물, 너구리 도둑, 회오리 청소기가 등장하는 아케이드
+   PICTURE: 노을빛 공장 하늘, 굴러가는 벨트, 먹으면 냠 하고 틀리면 우웩하는 6색 수거함
+   COLOUR and TYPE: 햇살 노랑 하늘 + 숯색 벨트 + 수거함 6색, 밤엔 남색 하늘. Jua 제목, Gowun Dodum 본문
+   LAYOUT: 작은 제목 아래 게임 화면이 첫 화면 대부분, 그 아래 헷갈리는 분리수거 도감 */
+:root{color-scheme:light dark;
+--bg:light-dark(#fff4d6,#12142a);--ink:light-dark(#2a2320,#f3eee6);--sub:light-dark(#6b5d50,#b9b3c9);
+--sky1:light-dark(#ffcf4a,#1b1f45);--sky2:light-dark(#ff9f5a,#3a2d5c);--far:light-dark(#f08a4b,#262250);--near:light-dark(#d9653a,#1a1838);
+--card:light-dark(#fffaf0,#1e2140);--line:light-dark(#ecd9b0,#33375e);--accent:#ff4f6d}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Gowun Dodum",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(18px,3vw,40px) max(4vw,12px);max-width:1040px;margin:0 auto}
+h1,h2,.jua{font-family:Jua,"Gowun Dodum",sans-serif;font-weight:400}
+h1{font-size:clamp(32px,5vw,46px);line-height:1.05;margin:0 0 4px;text-wrap:balance}
+.lead{margin:0 0 16px;color:var(--sub)}
+.stage{position:relative;height:clamp(500px,68vw,620px);border-radius:24px;overflow:hidden;background:linear-gradient(var(--sky1),var(--sky2) 60%);box-shadow:0 18px 40px -18px #6a3a1a99;user-select:none;-webkit-user-select:none;touch-action:none}
+.stage.shake{animation:sh .32s}
+@keyframes sh{20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,0)}}
+.scene{position:absolute;inset:0 0 auto 0;height:44%;width:100%}
+.stage.fever{background:linear-gradient(120deg,#ff5f8f,#ffb23f,#4fd1c5,#6b8cff,#ff5f8f);background-size:400% 400%;animation:fv 3s linear infinite}
+.stage.bossy{background:linear-gradient(#5b2a6e,#c2414b 70%)}
+.stage.slow::after{content:"";position:absolute;inset:0;background:radial-gradient(transparent 50%,#4fb3ff55);pointer-events:none;z-index:2}
+@keyframes fv{to{background-position:400% 0}}
+.hud{position:absolute;inset:10px 12px auto 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;z-index:6;font-family:Jua,sans-serif}
+.pill{background:#fff;color:#2a2320;border-radius:999px;padding:4px 14px;box-shadow:0 3px 0 #0002;font-size:17px;white-space:nowrap}
+.pill b{font-weight:400;font-size:22px}
+#combo{background:var(--accent);color:#fff}
+#combo.pop{animation:pp .25s}@keyframes pp{50%{transform:scale(1.25)}}
+#pw{background:#2a2320;color:#ffd23f}#pw:empty{display:none}
+.hearts{display:flex;gap:2px}.hearts svg{width:22px;height:22px}
+.hud .sp{flex:1}
+.ib{width:44px;height:44px;border-radius:50%;border:0;background:#fff;color:#2a2320;box-shadow:0 3px 0 #0002;cursor:pointer;display:grid;place-items:center}
+.ib svg{width:22px;height:22px}
+.ib:focus-visible,.bin:focus-visible,.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.bossbar{position:absolute;left:50%;top:62px;transform:translateX(-50%);width:min(70%,420px);z-index:6;font:15px Jua,sans-serif;color:#fff;text-align:center;-webkit-text-stroke:4px #2a2320;paint-order:stroke}
+.bossbar[hidden]{display:none}
+.bossbar div{height:14px;border-radius:8px;background:#2a2320;border:2px solid #fff;margin-top:2px;overflow:hidden}
+.bossbar i{display:block;height:100%;background:linear-gradient(90deg,#ff4f6d,#ffb020);transition:width .2s}
+.belt{position:absolute;left:0;right:0;top:44%;height:24px;background:repeating-linear-gradient(90deg,#3b3540 0 20px,#29242d 20px 40px);border-top:4px solid #5a5260;border-bottom:4px solid #18151b}
+.frame{position:absolute;left:0;right:0;top:calc(44% + 28px);height:34px;background:linear-gradient(#55505a,#36313b)}
+.frame::after{content:"";position:absolute;inset:6px 0 auto;height:14px;background:radial-gradient(circle at 12px 7px,#8d8694 5px,#29242d 6px,transparent 7px) 0 0/40px 14px repeat-x}
+.edge{position:absolute;left:0;top:calc(44% - 12px);width:16px;height:76px;background:repeating-linear-gradient(45deg,#ffd23f 0 8px,#222 8px 16px);border-radius:0 6px 6px 0;z-index:2}
+#items{position:absolute;inset:0;z-index:5;pointer-events:none}
+.item{position:absolute;left:0;top:0;will-change:transform;pointer-events:auto;cursor:grab;touch-action:none}
+.item.drag{cursor:grabbing;z-index:9}.item.drag .art{transform:scale(1.2)}
+.item .art{width:100%;height:100%;filter:drop-shadow(0 4px 0 #0003)}
+.item .art svg{width:100%;height:100%;display:block}
+.item .nm{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);white-space:nowrap;font-size:13px;background:#fffd;color:#2a2320;padding:1px 8px;border-radius:999px;margin-bottom:4px;opacity:.75}
+.item.front .nm{opacity:1;font-family:Jua,sans-serif;font-size:17px;background:#fff;box-shadow:0 3px 0 #0002;margin-bottom:10px}
+.item.front .nm::after{content:"";position:absolute;left:50%;top:100%;border:7px solid transparent;border-top-color:#fff;transform:translateX(-50%)}
+.item.front .art{animation:bob .6s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-5px)}}
+.item.gold .art{filter:drop-shadow(0 0 8px #ffe066) drop-shadow(0 0 3px #fff)}
+.item.pow .art{animation:spin 2s linear infinite;filter:drop-shadow(0 0 10px #fff)}
+.item.pow .nm{background:#2a2320;color:#ffd23f;opacity:1;font-family:Jua,sans-serif}
+@keyframes spin{50%{transform:scale(1.12) rotate(8deg)}}
+.item .need{position:absolute;right:-10px;top:-6px;background:var(--accent);color:#fff;font:15px Jua,sans-serif;padding:2px 8px;border-radius:10px;animation:pp .8s infinite;white-space:nowrap}
+.bins{position:absolute;left:10px;right:10px;bottom:10px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(4px,1.2vw,12px);z-index:4}
+.bin{border:0;background:none;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+.bin svg{width:100%;max-width:120px;height:clamp(84px,14vw,124px);overflow:visible;transition:transform .12s}
+.bin:active svg,.bin.hover svg{transform:scale(1.08)}
+.bin.hover .tg{background:#fff;color:#2a2320}
+.bin .tg{font-family:Jua,sans-serif;font-size:clamp(14px,2vw,18px);color:#fff;background:#0006;border-radius:999px;padding:0 10px;margin-top:4px;white-space:nowrap}
+.bin .tg i{font-style:normal;opacity:.7;font-size:13px;margin-left:4px}
+.bin .mo,.bin .ms{display:none}
+.bin.eat .mn,.bin.bad .mn{display:none}.bin.eat .mo{display:inline}.bin.bad .ms{display:inline}
+.bin.eat svg{animation:eat .35s}.bin.bad svg{animation:sh .35s}
+.bin .lid{transform-origin:12px 18px;transition:transform .15s}
+.bin.eat .lid,.bin.hover .lid{transform:rotate(-24deg)}
+@keyframes eat{40%{transform:scale(1.12,.9)}70%{transform:scale(.95,1.06)}}
+.boss{position:absolute;right:-12px;z-index:5;pointer-events:none;transition:transform .3s}
+.boss[hidden]{display:none}.boss svg{width:100%;height:100%;overflow:visible}
+.boss .bd{animation:bob .5s ease-in-out infinite alternate}
+.boss.hit .bd{animation:sh .25s;filter:brightness(2)}
+.boss.in{animation:bin .6s ease-out}@keyframes bin{from{transform:translateX(120%)}}
+.racc{position:absolute;z-index:7;border:0;background:none;padding:0;cursor:pointer;width:96px;height:96px;animation:rin .35s ease-out}
+.racc[hidden]{display:none}.racc svg{width:100%;height:100%}
+.racc .bubble{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);white-space:nowrap;font:16px Jua,sans-serif;background:#fff;color:#2a2320;border-radius:12px;padding:2px 10px;box-shadow:0 3px 0 #0002}
+.racc .tm{position:absolute;left:8px;right:8px;bottom:-8px;height:6px;border-radius:3px;background:#0004;overflow:hidden}.racc .tm i{display:block;height:100%;background:#ff4f6d}
+@keyframes rin{from{transform:translateY(60px) scale(.4);opacity:0}}
+.fx{position:absolute;z-index:8;pointer-events:none;font-family:Jua,sans-serif;font-size:24px;color:#fff;-webkit-text-stroke:5px #2a2320;paint-order:stroke;white-space:nowrap;animation:up .9s ease-out forwards}
+@keyframes up{to{transform:translateY(-60px);opacity:0}}
+.pt{position:absolute;z-index:8;width:10px;height:10px;border-radius:3px;pointer-events:none}
+.toast{position:absolute;left:50%;top:96px;transform:translate(-50%,-10px);z-index:8;max-width:min(92%,560px);background:#2a2320;color:#fff;padding:10px 16px;border-radius:14px;font-size:16px;text-align:center;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}.toast b{font-family:Jua,sans-serif;font-weight:400;color:#ffd23f;font-size:18px}
+.banner{position:absolute;left:0;right:0;top:22%;text-align:center;z-index:8;font-family:Jua,sans-serif;font-size:clamp(36px,7vw,62px);line-height:1.05;color:#fff;-webkit-text-stroke:8px #2a2320;paint-order:stroke;pointer-events:none;animation:bn 1.4s ease-out forwards}
+.banner small{display:block;font-size:.45em;-webkit-text-stroke:5px #2a2320}
+@keyframes bn{0%{transform:scale(.3);opacity:0}20%{transform:scale(1.1);opacity:1}80%{opacity:1}100%{transform:translateY(-30px);opacity:0}}
+.flash{position:absolute;inset:0;z-index:7;background:#fff;pointer-events:none;animation:fl .4s forwards}@keyframes fl{to{opacity:0}}
+.ov{position:absolute;inset:0;z-index:10;display:grid;place-items:center;background:#2a232066;padding:16px}
+.ov[hidden]{display:none}
+.panel{background:var(--card);color:var(--ink);border-radius:22px;padding:clamp(16px,3vw,28px);width:min(100%,560px);max-height:100%;overflow:auto;text-align:center;box-shadow:0 10px 0 #0002}
+.panel h2{font-size:clamp(32px,5vw,44px);line-height:1.05;margin:0 0 6px}
+.panel p{margin:6px 0}
+.btn{font:22px Jua,sans-serif;border:0;border-radius:16px;padding:12px 30px;background:var(--accent);color:#fff;box-shadow:0 5px 0 #b8283f;cursor:pointer;margin-top:12px;min-height:48px}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b8283f}
+.how{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;text-align:left;margin:10px auto 0;max-width:440px;font-size:15px;align-items:center}
+.how kbd{font:15px Jua,sans-serif;background:#ffd23f;color:#2a2320;border-radius:8px;padding:2px 8px;white-space:nowrap;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.stats div{font-size:13px;color:var(--sub)}.stats b{display:block;font:30px Jua,sans-serif;color:var(--ink)}
+.oops{text-align:left;font-size:15px;margin:8px 0 0;padding:0;list-style:none}
+.oops li{padding:6px 0;border-top:1px dashed var(--line)}.oops b{font-family:Jua,sans-serif;font-weight:400}
+.new{color:var(--accent);font-family:Jua,sans-serif;font-size:20px}
+.guide h2{font-size:32px;margin:8px 0 12px}
+.guide ul{list-style:none;padding:0;margin:0;columns:2 300px;column-gap:40px}
+.guide li{break-inside:avoid;display:grid;grid-template-columns:7.5em 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.guide li b{font-family:Jua,sans-serif;font-weight:400;font-size:18px}
+.guide li span{color:var(--sub)}
+.foot{font-size:13px;color:var(--sub);margin-top:16px}
+@media(max-width:600px){.pill{font-size:15px;padding:3px 10px}.pill b{font-size:19px}.hearts svg{width:18px;height:18px}.bin .tg{padding:0 6px}.bin .tg i{display:none}.stats b{font-size:24px}.racc{width:76px;height:76px}.how{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.stage.shake,.bin.bad svg,.item.front .art,.stage.fever,.item.pow .art,.boss .bd{animation:none}}
+</style>
+</head>
+<body>
+<main class="band">
+  <h1>분리수거 대작전</h1>
+  <p class="lead">벨트 위 쓰레기를 맞는 통에 던지고, 끌어다 넣고, 쓰레기 괴물까지 물리치세요.</p>
+
+  <div class="stage" id="stage">
+    <svg class="scene" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <circle cx="780" cy="110" r="62" fill="#fff6c9" opacity=".85"/>
+      <g fill="#fff" opacity=".55"><ellipse cx="180" cy="80" rx="70" ry="18"/><ellipse cx="230" cy="66" rx="40" ry="20"/><ellipse cx="560" cy="50" rx="60" ry="14"/></g>
+      <path d="M0 260V170h80v-40h40v40h60v-70h30v70h90v-30l60 30v-30l60 30v-30l60 30h70v-90h34v90h120v-50h50v50h90v-60h40v60h116v90z" fill="var(--far)"/>
+      <path d="M0 260v-46h140v-24h90v24h200v-36h70v36h230v-20h120v20h150v46z" fill="var(--near)"/>
+      <g fill="#fff" opacity=".35"><circle cx="356" cy="92" r="12"/><circle cx="372" cy="70" r="16"/><circle cx="394" cy="44" r="20"/></g>
+    </svg>
+    <div class="hud">
+      <span class="pill">점수 <b id="score">0</b></span>
+      <span class="pill" id="combo">콤보 <b id="cb">0</b></span>
+      <span class="pill">레벨 <b id="lv">1</b></span>
+      <span class="hearts" id="hearts" aria-label="목숨"></span>
+      <span class="pill" id="pw"></span>
+      <span class="sp"></span>
+      <button class="ib" id="mute" aria-label="소리 켜기/끄기"></button>
+      <button class="ib" id="pause" aria-label="일시정지"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg></button>
+    </div>
+    <div class="bossbar" id="bossbar" hidden><span id="bossName">쓰레기 괴물</span><div><i id="bossHp"></i></div></div>
+    <div class="edge"></div><div class="belt" id="belt"></div><div class="frame"></div>
+    <div class="boss" id="boss" hidden></div>
+    <div id="items"></div>
+    <div class="bins" id="bins"></div>
+    <button class="racc" id="racc" hidden aria-label="너구리 쫓아내기"><span class="bubble">헤헤, 쏟아버릴까?</span><svg viewBox="0 0 100 100"><path d="M14 30L24 4l20 20zM86 30L76 4 56 24z" fill="#6f6a72"/><path d="M20 26l5-14 11 11zM80 26l-5-14-11 11z" fill="#2a2628"/><ellipse cx="50" cy="56" rx="40" ry="36" fill="#8c8790"/><path d="M12 52q18-16 38-2 20-14 38 2-6 14-20 12-10-2-18-6-8 4-18 6-14 2-20-12z" fill="#2a2628"/><circle cx="34" cy="54" r="7" fill="#fff"/><circle cx="66" cy="54" r="7" fill="#fff"/><circle cx="35" cy="55" r="3.5" fill="#111"/><circle cx="65" cy="55" r="3.5" fill="#111"/><ellipse cx="50" cy="76" rx="16" ry="12" fill="#e9e4ea"/><ellipse cx="50" cy="70" rx="6" ry="4" fill="#111"/><path d="M42 80q8 6 16 0" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/></svg><span class="tm"><i id="raccT"></i></span></button>
+    <div class="toast" id="toast"></div>
+
+    <div class="ov" id="startOv"><div class="panel">
+      <h2>분리수거 대작전</h2>
+      <p>쓰레기가 벨트 끝에서 떨어지기 전에 맞는 통에 넣으세요!</p>
+      <div class="how">
+        <kbd>통 누르기</kbd><span>화살표 달린 맨 앞 쓰레기가 그 통으로 슝. 키보드는 1~6</span>
+        <kbd>끌어다 놓기</kbd><span>아무 쓰레기나 잡아서 통에 직접 넣기</span>
+        <kbd>라벨·헹구기</kbd><span>페트병과 참치캔은 눌러서 손질부터. 스페이스도 돼요</span>
+        <kbd>번개!</kbd><span>벨트에 올라오자마자 빨리 넣으면 보너스</span>
+        <kbd>콤보 10</kbd><span>피버 타임, 점수 두 배</span>
+        <kbd>아이템</kbd><span>자석·슬로우·하트·회오리 청소기. 눌러서 발동</span>
+        <kbd>너구리</kbd><span>나타나면 얼른 눌러서 쫓아내기. 늦으면 쓰레기를 쏟아요</span>
+        <kbd>보스</kbd><span>3레벨마다 쓰레기 괴물! 맞게 넣을 때마다 체력이 깎여요</span>
+      </div>
+      <button class="btn" id="go">시작하기</button>
+      <p class="foot" id="bestStart"></p>
+    </div></div>
+
+    <div class="ov" id="pauseOv" hidden><div class="panel"><h2>잠깐 쉬는 중</h2><button class="btn" id="resume">계속하기</button></div></div>
+
+    <div class="ov" id="endOv" hidden><div class="panel">
+      <h2>작업 종료!</h2>
+      <p id="newBest" class="new" hidden>최고 기록 경신!</p>
+      <div class="stats">
+        <div><b id="eScore">0</b>점수</div><div><b id="eBest">0</b>최고</div>
+        <div><b id="eAcc">0%</b>정확도</div><div><b id="eMax">0</b>최대 콤보</div>
+      </div>
+      <p id="rank" class="jua" style="font-size:20px"></p>
+      <ul class="oops" id="oops"></ul>
+      <button class="btn" id="again">한 판 더!</button>
+    </div></div>
+  </div>
+</main>
+
+<section class="band guide">
+  <h2>헷갈리기 쉬운 분리수거</h2>
+  <ul>
+    <li><b>영수증</b><span>감열지라 종이로 재활용이 안 돼요. 일반쓰레기.</span></li>
+    <li><b>깨진 거울·유리컵</b><span>유리병이 아니에요. 신문지에 싸서 일반쓰레기(지역에 따라 불연성 마대).</span></li>
+    <li><b>기름 묻은 피자박스</b><span>오염된 종이는 재활용이 안 돼요. 깨끗한 뚜껑만 종이로.</span></li>
+    <li><b>투명 페트병</b><span>라벨은 떼서 비닐로, 병은 찌그러뜨려 플라스틱으로.</span></li>
+    <li><b>참치캔</b><span>남은 기름과 음식물을 헹궈서 캔으로.</span></li>
+    <li><b>칫솔·볼펜</b><span>여러 재질이 섞여 있어 일반쓰레기.</span></li>
+    <li><b>젤 아이스팩</b><span>안의 젤은 재활용이 안 돼요. 통째로 일반쓰레기.</span></li>
+    <li><b>휴지</b><span>물에 녹게 만든 종이라 재활용이 안 돼요. 일반쓰레기.</span></li>
+  </ul>
+  <p class="foot">배출 기준은 지역마다 조금씩 달라요. 사는 곳의 구청 안내를 함께 확인하세요.</p>
+</section>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const st=$('#stage'),layer=$('#items'),binsEl=$('#bins'),beltEl=$('#belt'),toastEl=$('#toast'),bossEl=$('#boss'),raccEl=$('#racc');
+const BINS=[{k:'paper',n:'종이',c:'#2f80ed'},{k:'plastic',n:'플라스틱',c:'#f08a24'},{k:'vinyl',n:'비닐',c:'#a35bd6'},{k:'can',n:'캔·고철',c:'#e5484d'},{k:'glass',n:'유리병',c:'#17a294'},{k:'trash',n:'일반',c:'#5d6878'}];
+const BI=Object.fromEntries(BINS.map((b,i)=>[b.k,i]));
+const shine='<rect x="22" y="24" width="4" height="26" rx="2" fill="#fff9"/>';
+const SH={
+ bottle:(c,lab)=>`<rect x="25" y="3" width="14" height="8" rx="2" fill="#2b6cb0"/><path d="M27 11h10v6c6 3 9 7 9 12v26a5 5 0 0 1-5 5H23a5 5 0 0 1-5-5V29c0-5 3-9 9-12z" fill="${c}" stroke="#4a90b8" stroke-width="2"/>${lab?'<rect x="18" y="32" width="28" height="13" fill="#e5484d"/><path d="M22 38h20" stroke="#fff" stroke-width="3"/>':''}${shine}`,
+ glass:c=>`<rect x="27" y="2" width="10" height="6" rx="1" fill="#d9b23a"/><path d="M28 8h8v13c6 4 9 8 9 14v22a4 4 0 0 1-4 4H23a4 4 0 0 1-4-4V35c0-6 3-10 9-14z" fill="${c}"/><ellipse cx="32" cy="44" rx="9" ry="7" fill="#fff" opacity=".9"/>${shine}`,
+ can:c=>`<rect x="18" y="10" width="28" height="48" rx="5" fill="${c}"/><ellipse cx="32" cy="11" rx="14" ry="4" fill="#d6dbe1" stroke="#9aa5b1"/><rect x="18" y="27" width="28" height="10" fill="#fff" opacity=".85"/><rect x="21" y="14" width="4" height="40" rx="2" fill="#fff7"/>`,
+ tin:(c,dirty)=>`<rect x="12" y="24" width="40" height="28" rx="4" fill="#c8d0d9"/><rect x="12" y="32" width="40" height="12" fill="${c}"/><ellipse cx="32" cy="24" rx="20" ry="6" fill="#eef1f4" stroke="#9aa5b1" stroke-width="2"/>${dirty?'<ellipse cx="30" cy="24" rx="13" ry="3.5" fill="#c98a3a"/><circle cx="18" cy="40" r="3" fill="#a8742c"/><circle cx="44" cy="48" r="4" fill="#a8742c"/><path d="M24 16q-3-5 0-10M32 15q-3-5 0-10M40 16q-3-5 0-10" stroke="#8a9a4a" stroke-width="2.5" fill="none"/>':''}`,
+ box:()=>`<path d="M8 22l24-10 24 10v28l-24 10-24-10z" fill="#c98a4b"/><path d="M8 22l24 10 24-10M32 32v28" stroke="#8a5a2b" stroke-width="2" fill="none"/><path d="M20 17l24 10" stroke="#f1e2b8" stroke-width="5"/>`,
+ paper:c=>`<rect x="10" y="12" width="44" height="40" rx="2" fill="#f4f1ea" stroke="#9c958a" stroke-width="2"/><rect x="15" y="17" width="34" height="8" fill="${c}"/><rect x="15" y="29" width="15" height="14" fill="#c9c3b8"/><path d="M34 31h15M34 36h15M34 41h15M15 47h34" stroke="#9c958a" stroke-width="2"/>`,
+ bag:c=>`<path d="M14 10l4 4 4-4 4 4 4-4 4 4 4-4 4 4 4-4 4 4v42l-4-4-4 4-4-4-4 4-4-4-4 4-4-4-4 4-4-4-4 4z" fill="${c}"/><ellipse cx="32" cy="32" rx="11" ry="8" fill="#fff" opacity=".9"/><circle cx="32" cy="32" r="4" fill="${c}"/>`,
+ jug:c=>`<rect x="29" y="4" width="5" height="10" fill="#555"/><rect x="29" y="4" width="16" height="4" rx="2" fill="#555"/><rect x="24" y="14" width="15" height="7" fill="#ddd"/><rect x="16" y="20" width="31" height="40" rx="9" fill="${c}"/><rect x="21" y="32" width="21" height="14" rx="3" fill="#fff" opacity=".85"/>`,
+ cup:()=>`<ellipse cx="32" cy="14" rx="10" ry="3" fill="#e5484d"/><path d="M22 14h20l-2 9c4 4 5 9 5 15v16a6 6 0 0 1-6 6H25a6 6 0 0 1-6-6V38c0-6 1-11 5-15z" fill="#fff" stroke="#f0a0a0" stroke-width="2"/><rect x="21" y="36" width="22" height="9" fill="#ffb3c1"/>`,
+ jar:c=>`<rect x="18" y="8" width="28" height="10" rx="2" fill="${c}"/><rect x="14" y="18" width="36" height="40" rx="8" fill="#cfeaf3" stroke="#7fb6c9" stroke-width="2"/><rect x="17" y="34" width="30" height="21" rx="6" fill="#d6304a"/><rect x="20" y="22" width="4" height="26" rx="2" fill="#fff9"/>`,
+ receipt:()=>`<path d="M18 6h28v50l-4-3-4 3-4-3-4 3-4-3-4 3-4-3z" fill="#fff" stroke="#bbb" stroke-width="2"/><path d="M22 14h20M22 21h14M22 28h20M22 35h12M22 44h20" stroke="#888" stroke-width="2.5"/>`,
+ mirror:()=>`<rect x="12" y="6" width="40" height="52" rx="18" fill="#8a6a4a"/><rect x="16" y="10" width="32" height="44" rx="15" fill="#d8f1f7"/><path d="M30 10l4 14-8 8 10 6-4 16M34 24l12-4M26 32l-10 2" stroke="#6a8a96" stroke-width="2" fill="none"/>`,
+ pizza:()=>`<path d="M6 26l26-8 26 8v22l-26 8-26-8z" fill="#e8c48a"/><path d="M6 26l26 8 26-8M32 34v22" stroke="#b58b50" stroke-width="2" fill="none"/><ellipse cx="18" cy="42" rx="6" ry="4" fill="#b06a1a" opacity=".7"/><ellipse cx="44" cy="45" rx="5" ry="3" fill="#b06a1a" opacity=".7"/><circle cx="32" cy="25" r="5" fill="#e5484d"/>`,
+ tissue:()=>`<path d="M18 26l8-10 10 4 10-4 6 12-4 10 4 10-12 8-10-4-10 4-6-12 4-8z" fill="#fff" stroke="#c9c9d6" stroke-width="2"/><path d="M26 28l8 6 6-4M24 44l10-4 8 6" stroke="#c9c9d6" stroke-width="2" fill="none"/>`,
+ brush:()=>`<g transform="rotate(-35 32 32)"><rect x="29" y="18" width="7" height="44" rx="3.5" fill="#3fb5e8"/><rect x="28" y="4" width="9" height="16" rx="2" fill="#fff" stroke="#bbb"/><path d="M30 6v12M33 6v12M36 6v12" stroke="#7fd3f5" stroke-width="2"/></g>`,
+ pen:()=>`<g transform="rotate(40 32 32)"><rect x="28" y="6" width="8" height="44" rx="3" fill="#2f5fd0"/><path d="M28 50h8l-4 10z" fill="#e8d3a8"/><rect x="29" y="4" width="6" height="10" rx="2" fill="#173a8a"/></g>`,
+ bubble:()=>`<rect x="8" y="14" width="48" height="36" rx="4" fill="#e7f3ff" stroke="#9cc6ea" stroke-width="2"/>${[0,1,2,3].map(r=>[0,1,2,3,4].map(c=>`<circle cx="${15+c*8.5}" cy="${21+r*7.5}" r="3.2" fill="#fff" stroke="#9cc6ea"/>`).join('')).join('')}`,
+ note:()=>`<rect x="14" y="8" width="36" height="48" rx="3" fill="#ffd23f"/><rect x="14" y="8" width="7" height="48" fill="#e0a800"/><rect x="25" y="18" width="20" height="10" rx="2" fill="#fff"/>`,
+ ice:()=>`<rect x="10" y="14" width="44" height="36" rx="10" fill="#bfe4ff" stroke="#6fb2e6" stroke-width="2"/><path d="M32 20v24M22 26l20 12M42 26L22 38" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`,
+ // 아이템
+ magnet:()=>`<circle cx="32" cy="32" r="28" fill="#fff"/><path d="M18 18v16a14 14 0 0 0 28 0V18h-9v16a5 5 0 0 1-10 0V18z" fill="#e5484d"/><rect x="18" y="14" width="9" height="8" fill="#ccd3db"/><rect x="37" y="14" width="9" height="8" fill="#ccd3db"/>`,
+ clock:()=>`<circle cx="32" cy="32" r="28" fill="#fff"/><circle cx="32" cy="34" r="19" fill="#4fb3ff" stroke="#1f6fb8" stroke-width="3"/><path d="M32 34V22M32 34l8 5" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><rect x="28" y="9" width="8" height="6" rx="2" fill="#1f6fb8"/>`,
+ life:()=>`<circle cx="32" cy="32" r="28" fill="#fff"/><path d="M32 50s-16-10-16-21a8.5 8.5 0 0 1 16-4 8.5 8.5 0 0 1 16 4c0 11-16 21-16 21z" fill="#ff4f6d"/>`,
+ whirl:()=>`<circle cx="32" cy="32" r="28" fill="#fff"/><path d="M14 18h36M18 27h28M22 36h20M26 45h12M30 52h4" stroke="#17a294" stroke-width="5" stroke-linecap="round"/>`
+};
+const ITEMS=[
+ {n:'신문지',b:'paper',d:()=>SH.paper('#2a2320'),t:'신문지는 종이류!'},
+ {n:'택배상자',b:'paper',d:SH.box,t:'테이프·송장 떼고 펴서 종이로.'},
+ {n:'잡지',b:'paper',d:()=>SH.paper('#e5484d'),t:'코팅 없는 잡지는 종이로.'},
+ {n:'공책',b:'paper',d:SH.note,t:'스프링이 있으면 빼고 종이로.'},
+ {n:'페트병',b:'plastic',d:i=>SH.bottle('#cdeeff',i.need),need:'label',t:'라벨은 비닐로, 병은 플라스틱으로!'},
+ {n:'샴푸통',b:'plastic',d:()=>SH.jug('#ff8fb8'),t:'내용물 비우고 플라스틱으로.'},
+ {n:'세제통',b:'plastic',d:()=>SH.jug('#4aa3ff'),t:'헹궈서 플라스틱으로.'},
+ {n:'요구르트병',b:'plastic',d:SH.cup,t:'작아도 플라스틱!'},
+ {n:'과자봉지',b:'vinyl',d:()=>SH.bag('#ffb020'),t:'과자봉지는 비닐류.'},
+ {n:'라면봉지',b:'vinyl',d:()=>SH.bag('#e5484d'),t:'라면봉지도 비닐류.'},
+ {n:'뽁뽁이',b:'vinyl',d:SH.bubble,t:'에어캡은 비닐로.'},
+ {n:'콜라캔',b:'can',d:()=>SH.can('#d62f3a'),t:'음료캔은 캔류!'},
+ {n:'사이다캔',b:'can',d:()=>SH.can('#2fa86a'),t:'음료캔은 캔류!'},
+ {n:'참치캔',b:'can',d:i=>SH.tin('#2f80ed',i.need),need:'wash',t:'기름을 헹군 뒤 캔으로.'},
+ {n:'커피캔',b:'can',d:()=>SH.can('#7a4a2a'),t:'커피캔도 캔류!'},
+ {n:'소주병',b:'glass',d:()=>SH.glass('#5fbf7f'),t:'소주병은 유리병!'},
+ {n:'맥주병',b:'glass',d:()=>SH.glass('#8a4b1f'),t:'맥주병은 유리병!'},
+ {n:'잼병',b:'glass',d:()=>SH.jar('#e8c34a'),t:'헹궈서 유리병으로, 뚜껑은 따로.'},
+ {n:'영수증',b:'trash',d:SH.receipt,trick:1,t:'감열지라 재활용이 안 돼요!'},
+ {n:'깨진 거울',b:'trash',d:SH.mirror,trick:1,t:'거울은 유리병이 아니에요. 싸서 일반으로.'},
+ {n:'기름 묻은 피자박스',b:'trash',d:SH.pizza,trick:1,t:'오염된 종이는 재활용이 안 돼요.'},
+ {n:'휴지',b:'trash',d:SH.tissue,trick:1,t:'휴지는 재활용 안 되는 종이예요.'},
+ {n:'칫솔',b:'trash',d:SH.brush,trick:1,t:'여러 재질이 섞여서 일반쓰레기.'},
+ {n:'볼펜',b:'trash',d:SH.pen,trick:1,t:'여러 재질이 섞여서 일반쓰레기.'},
+ {n:'젤 아이스팩',b:'trash',d:SH.ice,trick:1,t:'젤은 재활용이 안 돼요. 일반쓰레기.'}
+];
+const POWS=[{n:'자석',p:'magnet',d:SH.magnet},{n:'슬로우',p:'slow',d:SH.clock},{n:'하트',p:'life',d:SH.life},{n:'회오리 청소기',p:'whirl',d:SH.whirl}];
+const NEEDTXT={label:'라벨 떼기',wash:'헹구기'};
+const BOSSES=['쓰레기 괴물','봉지 대왕','캔 드래곤','플라스틱 킹'];
+const heart=f=>`<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${f?'#ff4f6d':'#0003'}" stroke="#fff" stroke-width="2"/></svg>`;
+const SPK='<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>';
+const binSvg=b=>`<svg viewBox="0 0 80 92" aria-hidden="true"><ellipse cx="40" cy="89" rx="30" ry="4" fill="#0003"/><path d="M10 26h60l-6 58a6 6 0 0 1-6 5H22a6 6 0 0 1-6-5z" fill="${b.c}"/><path d="M10 26h60l-1 8H11z" fill="#0002"/><path d="M62 30l-6 54" stroke="#fff3" stroke-width="5"/><g class="lid"><rect x="6" y="14" width="68" height="13" rx="5" fill="${b.c}" stroke="#0002" stroke-width="3"/><rect x="30" y="8" width="20" height="8" rx="3" fill="${b.c}" stroke="#0002" stroke-width="3"/></g><circle cx="29" cy="50" r="8" fill="#fff"/><circle cx="51" cy="50" r="8" fill="#fff"/><circle cx="30" cy="52" r="4" fill="#222"/><circle cx="52" cy="52" r="4" fill="#222"/><path class="mn" d="M32 66q8 7 16 0" stroke="#222" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse class="mo" cx="40" cy="68" rx="9" ry="8" fill="#5a1a22"/><path class="ms" d="M31 72q9-9 18 0" stroke="#222" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`;
+const bossSvg=c=>`<svg viewBox="0 0 120 120"><ellipse cx="60" cy="116" rx="46" ry="5" fill="#0004"/><g class="bd"><rect x="12" y="20" width="14" height="34" rx="4" fill="#cdeeff" transform="rotate(-25 19 37)"/><rect x="92" y="16" width="16" height="30" rx="4" fill="#d62f3a" transform="rotate(20 100 31)"/><path d="M60 8q10 6 4 14 30 4 42 34 8 26-6 50-40 12-80 0-14-24-6-50 12-30 42-34-6-8 4-14z" fill="${c}"/><path d="M30 42l20 10M90 42L70 52" stroke="#111" stroke-width="6" stroke-linecap="round"/><circle cx="44" cy="58" r="9" fill="#fff"/><circle cx="76" cy="58" r="9" fill="#fff"/><circle cx="46" cy="60" r="4.5" fill="#d11"/><circle cx="74" cy="60" r="4.5" fill="#d11"/><path d="M34 80h52l-6 18H40z" fill="#3a0d14"/><path d="M34 80l6 8 6-8 6 8 6-8 6 8 6-8 6 8 6-8 6 8 4-8" fill="#fff"/><path d="M40 98l5-7 5 7 5-7 5 7 5-7 5 7 5-7 5 7" fill="#fff"/></g></svg>`;
+binsEl.innerHTML=BINS.map((b,i)=>`<button class="bin" id="bin-${b.k}" data-i="${i}" aria-label="${b.n} 통 (${i+1})">${binSvg(b)}<span class="tg">${b.n}<i>${i+1}</i></span></button>`).join('');
+const binBtns=[...binsEl.children];
+
+let W=0,H=0,S=64,beltY=0,items=[],last=0,running=false,paused=false,beltOff=0,clock=0;
+let score=0,combo=0,maxCombo=0,hearts=5,level=1,good=0,bad=0,fever=0,seenNeed={},oops=new Map();
+let magnet=0,magCd=0,slow=0,boss=null,bosses=0,racc=null,raccNext=20;
+let muted=false,ac=null;
+function size(){W=st.clientWidth;H=st.clientHeight;S=Math.round(Math.min(80,Math.max(54,W*.09)));beltY=H*.44;
+ const bs=Math.round(S*2.1);bossEl.style.width=bossEl.style.height=bs+'px';bossEl.style.top=(beltY-bs+8)+'px'}
+const ro=new ResizeObserver(size);ro.observe(st);size();
+
+/* ---------- 소리 ---------- */
+function audio(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}}
+function tone(f,d=.12,type='sine',v=.12,slide=1,delay=0){if(muted||!ac)return;try{const t=ac.currentTime+delay,o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide!==1)o.frequency.exponentialRampToValueAtTime(f*slide,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
+const sfx={
+ ok:()=>{const f=520*Math.pow(1.06,Math.min(combo,18));tone(f,.1,'square',.06);tone(f*1.5,.14,'sine',.1,1,.06)},
+ bad:()=>tone(180,.3,'sawtooth',.09,.6),
+ throw:()=>tone(300,.12,'triangle',.08,2.2),
+ peel:()=>{tone(900,.08,'square',.05,.5);tone(1400,.06,'sine',.06,1,.05)},
+ wash:()=>{for(let k=0;k<5;k++)tone(600+Math.random()*900,.05,'sine',.05,1.4,k*.04)},
+ drop:()=>tone(260,.4,'triangle',.1,.3),
+ lvl:()=>[523,659,784,1046].forEach((f,k)=>tone(f,.16,'square',.06,1,k*.09)),
+ fever:()=>[392,523,659,784,1046,1318].forEach((f,k)=>tone(f,.12,'sawtooth',.05,1,k*.06)),
+ pow:()=>[660,880,1320].forEach((f,k)=>tone(f,.1,'square',.06,1,k*.05)),
+ boss:()=>{tone(90,.8,'sawtooth',.12,.5);tone(60,1,'square',.08,.7,.2)},
+ hit:()=>tone(140,.12,'square',.08,.5),
+ win:()=>[523,659,784,1046,784,1046,1318].forEach((f,k)=>tone(f,.18,'square',.07,1,k*.1)),
+ racc:()=>[1200,900,1300].forEach((f,k)=>tone(f,.07,'square',.05,1,k*.07))
+};
+// 배경음악: 8비트 루프
+const MEL=[72,76,79,76,74,77,81,77,72,76,79,84,83,79,76,74],BAS=[48,48,55,55,50,50,53,53,48,48,55,55,43,43,47,47];
+const MELB=[69,72,76,72,68,71,76,71,69,72,77,76,75,72,71,68],BASB=[45,45,45,45,44,44,44,44,41,41,41,41,40,40,44,44];
+let nt=0,step=0,noise=null;const mid=m=>440*Math.pow(2,(m-69)/12);
+function hat(t){try{if(!noise){noise=ac.createBuffer(1,ac.sampleRate*.05|0,ac.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}const s=ac.createBufferSource(),g=ac.createGain(),f=ac.createBiquadFilter();f.type='highpass';f.frequency.value=7000;s.buffer=noise;g.gain.setValueAtTime(.04,t);g.gain.exponentialRampToValueAtTime(.001,t+.04);s.connect(f).connect(g).connect(ac.destination);s.start(t)}catch(e){}}
+function bnote(f,t,d,type,v){try{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
+setInterval(()=>{if(!ac||muted||!running||paused){nt=0;return}const bpm=fever>0?168:boss?150:Math.min(160,126+level*3),sp=60/bpm/2*(slow>0?1.5:1);
+ if(nt<ac.currentTime)nt=ac.currentTime+.05;
+ while(nt<ac.currentTime+.12){const i=step%16,m=boss?MELB:MEL,b=boss?BASB:BAS;bnote(mid(m[i]),nt,sp*.85,'square',.022);if(i%2===0)bnote(mid(b[i]),nt,sp*1.8,'triangle',.07);if(i%2===1||fever>0)hat(nt);step++;nt+=sp}},25);
+
+/* ---------- 화면 효과 ---------- */
+function hud(){$('#score').textContent=score.toLocaleString();$('#cb').textContent=combo;$('#lv').textContent=level;$('#hearts').innerHTML=[0,1,2,3,4].map(k=>heart(k<hearts)).join('');
+ $('#pw').textContent=[magnet>0?'자석 '+magnet:'',slow>0?'슬로우 '+Math.ceil(slow)+'초':'',fever>0?'피버 '+Math.ceil(fever)+'초':''].filter(Boolean).join(' · ')}
+let tt=0;function toast(html,ms=2200){toastEl.innerHTML=html;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),ms)}
+function fx(x,y,txt,col,big){const e=document.createElement('div');e.className='fx';e.textContent=txt;e.style.left=x+'px';e.style.top=y+'px';if(col)e.style.color=col;if(big)e.style.fontSize=big+'px';st.appendChild(e);setTimeout(()=>e.remove(),900)}
+function burst(x,y,col,n=14,r0=70){for(let k=0;k<n;k++){const p=document.createElement('div');p.className='pt';p.style.left=x+'px';p.style.top=y+'px';p.style.background=k%3?col:'#fff';st.appendChild(p);const a=Math.random()*Math.PI*2,r=40+Math.random()*r0;p.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r-30}px) rotate(${Math.random()*360}deg)`,opacity:0}],{duration:600+Math.random()*300,easing:'cubic-bezier(.2,.8,.4,1)'}).onfinish=()=>p.remove()}}
+function banner(txt,sub){const e=document.createElement('div');e.className='banner';e.textContent=txt;if(sub){const s=document.createElement('small');s.textContent=sub;e.appendChild(s)}st.appendChild(e);setTimeout(()=>e.remove(),1400)}
+function flash(){const e=document.createElement('div');e.className='flash';st.appendChild(e);setTimeout(()=>e.remove(),400)}
+function shake(){st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake')}
+function binReact(i,cls){const b=binBtns[i];b.classList.remove('eat','bad');void b.offsetWidth;b.classList.add(cls);setTimeout(()=>b.classList.remove(cls),420)}
+function binPos(i){const r=binBtns[i].getBoundingClientRect(),sr=st.getBoundingClientRect();return{x:r.left-sr.left+r.width/2-S/2,y:r.top-sr.top+r.height*.18-S/2}}
+
+/* ---------- 쓰레기 ---------- */
+function pick(){if(Math.random()<.065&&clock>8)return POWS[Math.floor(Math.random()*POWS.length)];
+ const pool=ITEMS.flatMap(it=>Array(it.trick?(level>=2?3:1):2).fill(it));return pool[Math.floor(Math.random()*pool.length)]}
+function spawn(x=W+20,drop=false,it=pick()){const inst={it,x,need:it.need||null,pow:it.p||null,gold:!it.p&&Math.random()<.07,el:document.createElement('div'),born:clock};
+ if(drop)inst.drop={t:0};
+ inst.el.className='item'+(inst.gold?' gold':'')+(inst.pow?' pow':'');inst.el.style.width=inst.el.style.height=S+'px';render(inst);bindDrag(inst);
+ layer.appendChild(inst.el);items.push(inst);
+ if(inst.need&&!seenNeed[inst.need]){seenNeed[inst.need]=1;toast(inst.need==='label'?'<b>라벨 붙은 페트병!</b> 눌러서 라벨부터 떼세요':'<b>기름 범벅 참치캔!</b> 눌러서 헹군 뒤 버리세요',3000)}
+ if(inst.pow&&!seenNeed[inst.pow]){seenNeed[inst.pow]=1;toast('<b>아이템 등장!</b> 눌러서 써 보세요',2200)}}
+function render(inst){inst.el.innerHTML=`<div class="art"><svg viewBox="0 0 64 64">${inst.it.d(inst)}</svg></div><span class="nm">${inst.it.n}</span>${inst.need?`<b class="need">${NEEDTXT[inst.need]}</b>`:inst.pow?'<b class="need">탭!</b>':''}`}
+const onBelt=()=>items.filter(i=>!i.fly&&!i.fall&&!i.dragging);
+function front(){let f=null;for(const i of onBelt())if(!i.pow&&!i.drop&&i.x<W&&(!f||i.x<f.x))f=i;return f}
+function curY(i){return beltY-S+2}
+
+function tap(inst){if(!running||paused||inst.fly)return;if(inst.pow)usePow(inst);else if(inst.need)handle(inst)}
+function handle(inst){const cx=inst.x+S/2,cy=beltY-S;
+ if(inst.need==='label'){sfx.peel();inst.need=null;render(inst);const lab=document.createElement('div');lab.className='pt';lab.style.cssText+=`width:${S*.45}px;height:${S*.2}px;background:#e5484d;left:${cx}px;top:${cy+S*.5}px`;st.appendChild(lab);
+  const p=binPos(BI.vinyl),tx=p.x+S/2-cx,ty=p.y+S/2-cy-S*.5;
+  lab.animate([{transform:'translate(0,0) rotate(0)'},{transform:`translate(${tx/2}px,-90px) rotate(200deg)`},{transform:`translate(${tx}px,${ty}px) rotate(400deg) scale(.5)`}],{duration:520,easing:'ease-in'}).onfinish=()=>{lab.remove();binReact(BI.vinyl,'eat');score+=5;fx(p.x,p.y-10,'+5 라벨 분리!');hud()}}
+ else{sfx.wash();inst.need=null;render(inst);burst(cx,cy+S*.3,'#7fd3ff',16);fx(cx-30,cy-20,'뽀득!','#bfe9ff')}}
+
+function usePow(inst){const cx=inst.x+S/2,cy=beltY-S/2;sfx.pow();burst(cx,cy,'#ffd23f',22,90);inst.el.remove();items=items.filter(i=>i!==inst);
+ if(inst.pow==='magnet'){magnet+=5;banner('자석 발동!','다음 5개 자동 분리')}
+ else if(inst.pow==='slow'){slow=7;st.classList.add('slow');banner('슬로우 모션!','7초 동안 느릿느릿')}
+ else if(inst.pow==='life'){if(hearts<5){hearts++;banner('하트 +1')}else{score+=200;banner('하트 만땅!','+200점')}}
+ else{flash();banner('회오리 청소기!','벨트 위 싹쓸이');let k=0;for(const i of onBelt().filter(i=>!i.pow&&i.x<W+S).sort((a,b)=>a.x-b.x)){i.need=null;render(i);autoSort(i,-k*.09);k++}}
+ hud()}
+function autoSort(i,t0=0){const p=binPos(BI[i.it.b]);i.drop=null;i.fly={t:t0,x0:i.x,y0:curY(i),x1:p.x,y1:p.y,bi:BI[i.it.b],auto:1};i.el.classList.remove('front')}
+
+function throwTo(bi,inst){if(!running||paused)return;const f=inst||front();if(!f){binReact(bi,'bad');return}
+ const p=binPos(bi);const x0=f.dragging?f.dx:f.x,y0=f.dragging?f.dy:curY(f);
+ f.fly={t:0,x0,y0,x1:p.x,y1:p.y,bi,quick:f.x>W*.6};f.dragging=false;f.drop=null;sfx.throw();f.el.classList.remove('front','drag')}
+
+/* ---------- 끌어다 놓기 ---------- */
+function binAt(px,py){const br=binsEl.getBoundingClientRect();if(py<br.top-50)return -1;let best=-1,bd=1e9;binBtns.forEach((b,i)=>{const r=b.getBoundingClientRect(),d=Math.abs(r.left+r.width/2-px);if(d<bd){bd=d;best=i}});return best}
+function bindDrag(inst){const el=inst.el;let sx=0,sy=0,moved=false,id=null,hov=-1;
+ el.addEventListener('pointerdown',e=>{if(!running||paused||inst.fly||inst.fall)return;e.preventDefault();id=e.pointerId;sx=e.clientX;sy=e.clientY;moved=false;try{el.setPointerCapture(id)}catch(_){}});
+ el.addEventListener('pointermove',e=>{if(id!==e.pointerId||inst.fly)return;const dx=e.clientX-sx,dy=e.clientY-sy;
+  if(!moved&&dx*dx+dy*dy>100&&!inst.pow){moved=true;inst.dragging=true;el.classList.add('drag');el.classList.remove('front')}
+  if(moved){const sr=st.getBoundingClientRect();inst.dx=e.clientX-sr.left-S/2;inst.dy=e.clientY-sr.top-S/2;el.style.transform=`translate(${inst.dx}px,${inst.dy}px)`;
+   const b=binAt(e.clientX,e.clientY);if(b!==hov){if(hov>=0)binBtns[hov].classList.remove('hover');hov=b;if(b>=0)binBtns[b].classList.add('hover')}}});
+ const up=e=>{if(id!==e.pointerId)return;id=null;if(hov>=0)binBtns[hov].classList.remove('hover');
+  if(!moved){tap(inst);return}
+  const b=binAt(e.clientX,e.clientY);hov=-1;el.classList.remove('drag');
+  if(b>=0&&running)throwTo(b,inst);else{inst.dragging=false}};
+ el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)}
+
+/* ---------- 판정 ---------- */
+const CALLS={5:'좋아요!',15:'굉장해!',20:'미쳤다!',30:'전설의 선별왕!',40:'지구 지킴이!',50:'신의 손!'};
+function land(inst){const {bi}=inst.fly;const ok=BI[inst.it.b]===bi&&!inst.need;const bx=inst.fly.x1+S/2,by=inst.fly.y1;
+ inst.el.remove();items=items.filter(i=>i!==inst);
+ if(ok){combo++;maxCombo=Math.max(maxCombo,combo);good++;let pts=10*(1+Math.floor(combo/5))*(fever>0?2:1)*(inst.gold?3:1);
+  if(inst.fly.quick&&!inst.fly.auto){pts+=15;fx(bx-30,by-58,'번개!','#ffe066')}
+  score+=pts;sfx.ok();binReact(bi,'eat');burst(bx,by+10,BINS[bi].c);fx(bx-24,by-30,'+'+pts,inst.gold?'#ffe066':null);
+  const c=$('#combo');c.classList.remove('pop');void c.offsetWidth;c.classList.add('pop');
+  if(combo%10===0){fever=8;st.classList.add('fever');sfx.fever();banner(combo>=20&&CALLS[combo]?CALLS[combo]:'피버 타임!','점수 ×2')}
+  else if(CALLS[combo])banner(CALLS[combo]);
+  if(boss)hitBoss();
+  if(good%10===0){level++;setTimeout(()=>{sfx.lvl();if(level%3===0&&!boss)startBoss();else banner('레벨 '+level+'!','속도 UP')},300)}}
+ else{combo=0;bad++;hearts--;sfx.bad();binReact(bi,'bad');shake();
+  const why=inst.need&&BI[inst.it.b]===bi?(inst.need==='label'?'라벨을 먼저 떼야 해요!':'먼저 헹궈야 해요!'):inst.it.t;
+  toast(`<b>${inst.it.n} → ${BINS[BI[inst.it.b]].n}</b><br>${why}`,2600);oops.set(inst.it.n,`${BINS[BI[inst.it.b]].n} · ${inst.it.t}`);
+  fx(bx-30,by-30,'우웩!','#ff9aa8');endFever()}
+ hud();if(hearts<=0)end()}
+function endFever(){fever=0;st.classList.remove('fever')}
+function miss(inst){inst.fall={t:0,y:curY(inst)};if(inst.pow)return;combo=0;bad++;hearts--;sfx.drop();shake();endFever();
+ toast(`<b>${inst.it.n}</b> 놓쳤어요! 정답은 ${BINS[BI[inst.it.b]].n}`,1800);oops.set(inst.it.n,`${BINS[BI[inst.it.b]].n} · ${inst.it.t}`);hud();if(hearts<=0)end()}
+
+/* ---------- 보스 ---------- */
+const BCOL=['#2a2628','#7a3fb0','#c0392b','#e07b16'];
+function startBoss(){const k=bosses%4;boss={hp:10+level*2,max:10+level*2,k};bossEl.innerHTML=bossSvg(BCOL[k]);bossEl.hidden=false;bossEl.classList.remove('in');void bossEl.offsetWidth;bossEl.classList.add('in');
+ $('#bossName').textContent=BOSSES[k];$('#bossHp').style.width='100%';$('#bossbar').hidden=false;st.classList.add('bossy');sfx.boss();shake();banner(BOSSES[k]+' 등장!','맞게 넣어서 물리치세요')}
+function hitBoss(){boss.hp--;$('#bossHp').style.width=(boss.hp/boss.max*100)+'%';sfx.hit();bossEl.classList.remove('hit');void bossEl.offsetWidth;bossEl.classList.add('hit');
+ const r=bossEl.getBoundingClientRect(),sr=st.getBoundingClientRect();fx(r.left-sr.left+20,r.top-sr.top,'-1','#ff9aa8');
+ if(boss.hp<=0){const bonus=300*level,x=r.left-sr.left+r.width/2,y=r.top-sr.top+r.height/2;score+=bonus;hearts=Math.min(5,hearts+1);bosses++;
+  for(let k=0;k<4;k++)setTimeout(()=>burst(x-40+Math.random()*60,y-30+Math.random()*60,['#ffd23f','#ff4f6d','#4fd1c5','#6b8cff'][k],22,110),k*120);
+  flash();sfx.win();banner('보스 격파!','+'+bonus+'점 · 하트 +1');boss=null;bossEl.hidden=true;$('#bossbar').hidden=true;st.classList.remove('bossy')}}
+
+/* ---------- 너구리 ---------- */
+function showRacc(){racc={t:3.2,max:3.2};const rx=W*(.35+Math.random()*.4);raccEl.style.left=rx+'px';raccEl.style.top=(beltY-S-(W<600?96:116))+'px';raccEl.hidden=false;sfx.racc()}
+raccEl.addEventListener('pointerdown',e=>{e.preventDefault();if(!racc||paused)return;const r=raccEl.getBoundingClientRect(),sr=st.getBoundingClientRect();
+ score+=100;fx(r.left-sr.left,r.top-sr.top,'+100 쫓아냈다!','#ffe066');burst(r.left-sr.left+40,r.top-sr.top+40,'#8c8790',16);sfx.pow();racc=null;raccEl.hidden=true;raccNext=16+Math.random()*14;hud()});
+function raccDump(){racc=null;raccEl.hidden=true;raccNext=16+Math.random()*14;toast('<b>너구리가 쓰레기를 쏟았어요!</b>',1800);shake();
+ for(let k=0;k<4;k++){const it=ITEMS[Math.floor(Math.random()*ITEMS.length)];spawn(W*(.45+k*.14),true,it)}}
+
+/* ---------- 메인 루프 ---------- */
+function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000||0);last=t;if(!running||paused)return;clock+=dt;
+ const k=Math.max(.6,Math.min(1.2,W/800));let v=(48+level*11)*k*(fever>0?1.2:1)*(boss?1.1:1);if(slow>0){v*=.45;slow-=dt;if(slow<=0)st.classList.remove('slow')}
+ if(fever>0){fever-=dt;if(fever<=0)endFever()}
+ beltOff-=v*dt;beltEl.style.backgroundPosition=beltOff+'px 0';
+ const gap=Math.max(S*1.3,(200-level*9)*k*(boss?.7:1)),ob=onBelt();const tail=ob.reduce((m,i)=>Math.max(m,i.x),-1e9);
+ if(!ob.length||tail<W-gap)spawn();
+ if(level>=2&&!boss&&!racc){raccNext-=dt;if(raccNext<=0)showRacc()}
+ if(racc){racc.t-=dt;$('#raccT').style.width=(racc.t/racc.max*100)+'%';if(racc.t<=0)raccDump()}
+ const f=front();
+ if(magnet>0&&f){magCd-=dt;if(magCd<=0&&f.x<W*.85){if(f.need){f.need=null;render(f)}autoSort(f);magnet--;magCd=.35;hud()}}
+ for(const i of [...items]){
+  if(i.fly){i.fly.t+=dt/.38;if(i.fly.t<0)continue;const p=Math.min(1,i.fly.t),x=i.fly.x0+(i.fly.x1-i.fly.x0)*p,y=i.fly.y0+(i.fly.y1-i.fly.y0)*p-Math.sin(p*Math.PI)*Math.min(140,H*.22);
+   i.el.style.transform=`translate(${x}px,${y}px) rotate(${p*540}deg) scale(${1-p*.4})`;if(p>=1)land(i);continue}
+  if(i.fall){i.fall.t+=dt;i.x-=v*dt*.6;const y=i.fall.y+i.fall.t*i.fall.t*900;i.el.style.transform=`translate(${i.x}px,${y}px) rotate(${-i.fall.t*400}deg)`;i.el.style.opacity=1-i.fall.t*1.6;if(i.fall.t>.6){i.el.remove();items=items.filter(z=>z!==i)}continue}
+  if(i.dragging)continue;
+  i.x-=v*dt;let y=curY(i);
+  if(i.drop){i.drop.t+=dt*2.2;const p=Math.min(1,i.drop.t);y=-S+(y+S)*(1-Math.pow(1-p,3))-Math.sin(p*Math.PI)*10;if(p>=1)i.drop=null}
+  i.el.classList.toggle('front',i===f);i.el.style.transform=`translate(${i.x}px,${y}px)`;
+  if(i.x<-S*.35)miss(i)}
+ if(Math.floor(clock*4)!==Math.floor((clock-dt)*4))hud()}
+
+function clearItems(){items.forEach(i=>i.el.remove());items=[]}
+function start(){audio();clearItems();score=0;combo=0;maxCombo=0;hearts=5;level=1;good=0;bad=0;oops=new Map();clock=0;magnet=0;slow=0;boss=null;bosses=0;racc=null;raccNext=20;
+ endFever();st.classList.remove('slow','bossy');bossEl.hidden=true;$('#bossbar').hidden=true;raccEl.hidden=true;
+ ['startOv','endOv','pauseOv'].forEach(id=>$('#'+id).hidden=true);running=true;paused=false;hud();sfx.lvl();banner('작업 시작!')}
+function getBest(){try{return +localStorage.getItem('recycleBest')||0}catch(e){return 0}}
+function setBest(v){try{localStorage.setItem('recycleBest',v)}catch(e){}}
+function end(){if(!running)return;running=false;const best=getBest(),nb=score>best;if(nb)setBest(score);
+ $('#eScore').textContent=score.toLocaleString();$('#eBest').textContent=Math.max(best,score).toLocaleString();
+ $('#eAcc').textContent=(good+bad?Math.round(good/(good+bad)*100):0)+'%';$('#eMax').textContent=maxCombo;$('#newBest').hidden=!nb;
+ $('#rank').textContent=(bosses?'보스 '+bosses+'마리 격파! ':'')+(score>=5000?'분리수거 마스터, 선별장 공장장 승진':score>=2500?'에이스 선별원! 지구가 고마워해요':score>=900?'든든한 신입 선별원':'오늘은 견습생, 한 판 더 가 볼까요?');
+ $('#oops').innerHTML=oops.size?'<li><b>헷갈렸던 것</b></li>'+[...oops].slice(0,6).map(([n,t])=>`<li><b>${n}</b> → ${t}</li>`).join(''):'<li>실수 없이 완벽했어요!</li>';
+ setTimeout(()=>{$('#endOv').hidden=false;$('#again').focus()},600)}
+function setPause(p){if(!running)return;paused=p;$('#pauseOv').hidden=!p;if(p)$('#resume').focus()}
+
+binBtns.forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();throwTo(+b.dataset.i)}));
+binBtns.forEach(b=>b.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();throwTo(+b.dataset.i)}}));
+$('#go').addEventListener('click',start);$('#again').addEventListener('click',start);
+$('#resume').addEventListener('click',()=>setPause(false));$('#pause').addEventListener('click',()=>setPause(!paused));
+$('#mute').addEventListener('click',()=>{muted=!muted;drawMute()});
+function drawMute(){$('#mute').innerHTML=SPK+(muted?'<path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2"/></svg>':'<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>')}
+drawMute();
+document.addEventListener('keydown',e=>{if(e.key>='1'&&e.key<='6'){throwTo(+e.key-1);e.preventDefault()}
+ else if(e.key===' '){if(running&&!paused){const f=onBelt().filter(i=>(i.need||i.pow)&&i.x<W).sort((a,b)=>a.x-b.x)[0];if(f)tap(f)}e.preventDefault()}
+ else if(e.key==='p'||e.key==='Escape')setPause(!paused)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)setPause(true)});
+const b0=getBest();if(b0)$('#bestStart').textContent='내 최고 기록 '+b0.toLocaleString()+'점';
+hud();requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
